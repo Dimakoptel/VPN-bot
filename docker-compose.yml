@@ -1,9 +1,44 @@
+version: '3.8'
+
 services:
-  bot:
-    container_name: solobot
-    build: .
+  nexusbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexusbot
     restart: unless-stopped
-    network_mode: host
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN:-your_bot_token_here}
+      - ADMIN_IDS=${ADMIN_IDS:-}
+      - LICENSE_CHECK_ENABLED=false
+      - DATABASE_URL=sqlite:///data/nexusbot.db
+      - LOG_LEVEL=INFO
+      - TZ=Europe/Moscow
     volumes:
-      - /:/host:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - ./licenses:/app/licenses
+    networks:
+      - nexusbot_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  nexusbot_network:
+    driver: bridge
+    name: nexusbot_network
+
+volumes:
+  nexusbot_data:
+    name: nexusbot_data
 
