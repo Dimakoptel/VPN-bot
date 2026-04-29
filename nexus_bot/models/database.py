@@ -78,11 +78,11 @@ class User(Base):
     )
     referrals: Mapped[List["User"]] = relationship(
         back_populates="referrer",
-        remote_side=[id]
+        remote_side="User.id"
     )
     referrer: Mapped[Optional["User"]] = relationship(
         back_populates="referrals",
-        remote_side=[referrer_id]
+        remote_side="User.referrer_id"
     )
     
     def __repr__(self) -> str:
