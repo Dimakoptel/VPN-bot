@@ -162,6 +162,8 @@ class LicenseManager:
         owner_tg_id: Optional[int] = None
     ) -> str:
         """Создает новую лицензию (только для администратора)."""
+        # Гарантируем что duration_days это int
+        duration_days = int(duration_days) if duration_days else 365
         key = self.generate_key()
         
         license_obj = LicenseKey(
