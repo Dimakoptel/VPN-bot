@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import (
     async_scoped_session
 )
 from sqlalchemy.orm import sessionmaker
-from asyncio import current_thread
 
 from config.settings import settings
 from models.database import Base
