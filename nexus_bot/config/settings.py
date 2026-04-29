@@ -17,6 +17,19 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore"
     )
+    
+    # Пытаемся загрузить из родительской директории если .env не найден
+    try:
+        alt_env_file = Path(__file__).parent.parent / ".env"
+        if alt_env_file.exists():
+            model_config = SettingsConfigDict(
+                env_file=alt_env_file,
+                env_file_encoding="utf-8",
+                case_sensitive=False,
+                extra="ignore"
+            )
+    except Exception:
+        pass
 
     # Bot Configuration
     BOT_TOKEN: str = Field(..., description="Telegram Bot Token")
@@ -29,7 +42,7 @@ class Settings(BaseSettings):
 
     # Database - SQLite для разработки, PostgreSQL для продакшена
     DATABASE_URL: str = Field(
-        default="sqlite+aiosqlite:///nexusbot.db",
+        default="sqlite+aiosqlite:///app/data/nexusbot.db",
         description="URL подключения к базе данных (SQLite по умолчанию, PostgreSQL для продакшена)"
     )
     
