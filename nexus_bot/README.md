@@ -48,6 +48,20 @@ nexus_bot/
 │   ├── user_service.py  # Сервис пользователей
 │   ├── subscription_service.py  # Подписки
 │   └── vpn_service.py   # Интеграция с VPN панелями
+├── licenses/            # Система лицензий
+│   ├── __init__.py
+│   └── manager.py       # Генерация и валидация лицензий
+├── utils/               # Утилиты
+│   ├── __init__.py
+│   └── logging.py       # Настройка логирования
+├── main.py              # Точка входа
+├── requirements.txt     # Зависимости Python
+├── Dockerfile           # Docker образ
+├── docker-compose.yml   # Docker Compose стек
+├── prometheus.yml       # Конфигурация Prometheus
+├── .env.example         # Шаблон конфигурации
+└── .dockerignore        # Игнорирование файлов для Docker
+```
 ├── licenses/            # Система лицензирования
 │   ├── __init__.py
 │   └── manager.py       # Менеджер лицензий
@@ -63,25 +77,51 @@ nexus_bot/
 
 ## 🚀 Быстрый старт
 
-### 1. Требования
+### 🔹 Вариант 1: Docker (рекомендуется)
+
+**Самый быстрый способ - все зависимости уже в контейнере!**
+
+```bash
+cd nexus_bot
+
+# 1. Скопируйте шаблон конфигурации
+cp .env.example .env
+
+# 2. Отредактируйте .env - укажите BOT_TOKEN и BOT_ADMIN_IDS
+nano .env
+
+# 3. Запустите бота
+docker-compose up -d
+
+# 4. Проверьте логи
+docker-compose logs -f
+```
+
+📖 **Подробная инструкция**: [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) | [QUICKSTART.md](QUICKSTART.md)
+
+---
+
+### 🔹 Вариант 2: Ручная установка (для разработки)
+
+#### 1. Требования
 
 - Python 3.9+
 - SQLite (по умолчанию) или PostgreSQL
 - Telegram Bot Token
 
-### 2. Установка зависимостей
+#### 2. Установка зависимостей
 
 ```bash
 cd nexus_bot
 pip install -r requirements.txt
 ```
 
-### 3. Настройка
+#### 3. Настройка
 
 Скопируйте `.env.example` в `.env`:
 
 ```bash
-cp config/.env.example config/.env
+cp .env.example .env
 ```
 
 Отредактируйте `config/.env`:
