@@ -3,6 +3,7 @@
 Использует pydantic-settings для валидации и загрузки из .env файла.
 """
 from typing import List
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
@@ -11,7 +12,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
     
     model_config = SettingsConfigDict(
-        env_file="../config/.env",
+        env_file=Path(__file__).parent / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
@@ -26,10 +27,38 @@ class Settings(BaseSettings):
         """Возвращает список ID администраторов как integers."""
         return [int(x.strip()) for x in self.BOT_ADMIN_IDS.split(",") if x.strip().isdigit()]
 
-    # Database
+    # Database - SQLite для разработки, PostgreSQL для продакшена
     DATABASE_URL: str = Field(
-        default="sqlite+aiosqlite:///nexus_bot.db",
-        description="URL подключения к базе данных"
+        default="sqlite+aiosqlite:///nexusbot.db",
+        description="URL подключения к базе данных (SQLite по умолчанию, PostgreSQL для продакшена)"
+    )
+    
+    # Logging Configuration
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        description="Уровень логирования"
+    )
+    LOG_FILE: str = Field(
+        default="/var/log/nexusbot/bot.log",
+        description="Путь к файлу логов"
+    )
+    LOG_MAX_BYTES: int = Field(
+        default=10485760,  # 10MB
+        description="Максимальный размер файла логов в байтах"
+    )
+    LOG_BACKUP_COUNT: int = Field(
+        default=5,
+        description="Количество резервных файлов логов"
+    )
+    
+    # Monitoring Configuration
+    PROMETHEUS_ENABLED: bool = Field(
+        default=False,
+        description="Включить мониторинг Prometheus"
+    )
+    PROMETHEUS_PORT: int = Field(
+        default=9090,
+        description="Порт для метрик Prometheus"
     )
 
     # License System

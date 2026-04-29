@@ -3,7 +3,6 @@
 Инициализирует бота, базу данных и регистрирует обработчики.
 """
 import asyncio
-import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -13,19 +12,20 @@ from core.database import db_manager
 from middleware.ban_checker import BanCheckMiddleware, LicenseCheckMiddleware
 from licenses.manager import license_manager
 from handlers import user_router, admin_router
+from utils.logging_config import setup_logging, get_logger
+from utils.monitoring import monitoring_service
 
 
 # Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
 
 async def on_startup(bot: Bot):
     """Выполняется при запуске бота."""
     logger.info(f"🚀 Запуск {settings.APP_NAME} v{settings.APP_VERSION}")
+    
+    # Запуск мониторинга
+    await monitoring_service.start()
     
     # Инициализация базы данных
     await db_manager.initialize()
@@ -37,8 +37,10 @@ async def on_startup(bot: Bot):
             is_valid, message = await license_manager.check_local_license(session)
             if is_valid:
                 logger.info(f"✅ Лицензия действительна: {message}")
+                monitoring_service.set_license_status("main", True)
             else:
                 logger.warning(f"⚠️ Проблема с лицензией: {message}")
+                monitoring_service.set_license_status("main", False)
     else:
         logger.info("ℹ️ Режим разработки (лицензия не установлена)")
     
@@ -53,11 +55,15 @@ async def on_startup(bot: Bot):
             )
         except Exception as e:
             logger.error(f"Не удалось отправить уведомление админу {admin_id}: {e}")
+            monitoring_service.inc_error("startup_notification", "bot")
 
 
 async def on_shutdown(bot: Bot):
     """Выполняется при остановке бота."""
     logger.info("🛑 Остановка бота...")
+    
+    # Остановка мониторинга
+    await monitoring_service.stop()
     
     # Закрытие подключения к БД
     await db_manager.close()
@@ -75,6 +81,7 @@ async def on_shutdown(bot: Bot):
             logger.error(f"Не удалось отправить уведомление админу {admin_id}: {e}")
     
     await bot.session.close()
+    logger.info("✅ Бот полностью остановлен")
 
 
 def register_handlers(dp: Dispatcher):
