@@ -9,8 +9,8 @@ from typing import Optional, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.database import LicenseKey, AuditLog
-from config.settings import settings
+from nexus_bot.models.database import LicenseKey, AuditLog
+from nexus_bot.config.settings import settings
 
 
 class LicenseError(Exception):
