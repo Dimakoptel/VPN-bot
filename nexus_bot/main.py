@@ -12,7 +12,7 @@ from core.database import db_manager
 from middleware.ban_checker import BanCheckMiddleware, LicenseCheckMiddleware
 from licenses.manager import license_manager
 from handlers import user_router, admin_router
-from utils.logging_config import setup_logging, get_logger
+from utils.logging_config import setup_logging
 from utils.monitoring import monitoring_service
 
 
@@ -23,14 +23,14 @@ logger = setup_logging()
 async def on_startup(bot: Bot):
     """Выполняется при запуске бота."""
     logger.info(f"🚀 Запуск {settings.APP_NAME} v{settings.APP_VERSION}")
-    
+
     # Запуск мониторинга
     await monitoring_service.start()
-    
+
     # Инициализация базы данных
     await db_manager.initialize()
     logger.info("✅ База данных инициализирована")
-    
+
     # Проверка лицензии (если настроена)
     if settings.LICENSE_KEY:
         async with db_manager.get_session() as session:
@@ -43,7 +43,7 @@ async def on_startup(bot: Bot):
                 monitoring_service.set_license_status("main", False)
     else:
         logger.info("ℹ️ Режим разработки (лицензия не установлена)")
-    
+
     # Отправка уведомления администраторам
     for admin_id in settings.admin_ids:
         try:
@@ -61,14 +61,14 @@ async def on_startup(bot: Bot):
 async def on_shutdown(bot: Bot):
     """Выполняется при остановке бота."""
     logger.info("🛑 Остановка бота...")
-    
+
     # Остановка мониторинга
     await monitoring_service.stop()
-    
+
     # Закрытие подключения к БД
     await db_manager.close()
     logger.info("✅ Подключение к БД закрыто")
-    
+
     # Уведомление администраторов
     for admin_id in settings.admin_ids:
         try:
@@ -79,7 +79,7 @@ async def on_shutdown(bot: Bot):
             )
         except Exception as e:
             logger.error(f"Не удалось отправить уведомление админу {admin_id}: {e}")
-    
+
     await bot.session.close()
     logger.info("✅ Бот полностью остановлен")
 
@@ -97,12 +97,12 @@ def register_middlewares(dp: Dispatcher):
     ban_middleware = BanCheckMiddleware(db_manager.get_session)
     dp.message.middleware(ban_middleware)
     dp.callback_query.middleware(ban_middleware)
-    
+
     # Middleware для проверки лицензии
     license_middleware = LicenseCheckMiddleware(license_manager)
     dp.message.middleware(license_middleware)
     dp.callback_query.middleware(license_middleware)
-    
+
     logger.info("✅ Middleware зарегистрированы")
 
 
@@ -113,18 +113,18 @@ async def main():
         token=settings.BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
-    
+
     # Создание диспетчера
     dp = Dispatcher()
-    
+
     # Регистрация обработчиков и middleware
     register_handlers(dp)
     register_middlewares(dp)
-    
+
     # Регистрация онстартап/оншатдаун хуков
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    
+
     # Запуск polling
     try:
         await dp.start_polling(bot)

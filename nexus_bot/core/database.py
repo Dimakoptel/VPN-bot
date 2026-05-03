@@ -7,10 +7,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
-    async_scoped_session
+    AsyncEngine
 )
-from sqlalchemy.orm import sessionmaker
 
 from config.settings import settings
 from models.database import Base
@@ -18,11 +16,11 @@ from models.database import Base
 
 class DatabaseManager:
     """Управление подключением к базе данных."""
-    
+
     def __init__(self):
         self._engine: Optional[AsyncEngine] = None
         self._async_session_maker: Optional[async_sessionmaker] = None
-    
+
     async def initialize(self) -> None:
         """Инициализация подключения к БД."""
         self._engine = create_async_engine(
@@ -30,7 +28,7 @@ class DatabaseManager:
             echo=False,  # Включить для отладки SQL запросов
             future=True
         )
-        
+
         self._async_session_maker = async_sessionmaker(
             self._engine,
             class_=AsyncSession,
@@ -38,16 +36,16 @@ class DatabaseManager:
             autocommit=False,
             autoflush=False
         )
-        
+
         # Создание таблиц (только если они не существуют)
         async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-    
+
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         """Генератор сессий для dependency injection."""
         if not self._async_session_maker:
             raise RuntimeError("Database not initialized. Call initialize() first.")
-        
+
         async with self._async_session_maker() as session:
             try:
                 yield session
@@ -57,14 +55,14 @@ class DatabaseManager:
                 raise
             finally:
                 await session.close()
-    
+
     async def close(self) -> None:
         """Закрытие подключения к БД."""
         if self._engine:
             await self._engine.dispose()
             self._engine = None
             self._async_session_maker = None
-    
+
     @property
     def is_initialized(self) -> bool:
         """Проверяет, инициализировано ли подключение."""

@@ -10,14 +10,14 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     """Настройки приложения."""
-    
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
     )
-    
+
     # Пытаемся загрузить из родительской директории если .env не найден
     try:
         alt_env_file = Path(__file__).parent.parent / ".env"
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # Bot Configuration
     BOT_TOKEN: str = Field(..., description="Telegram Bot Token")
     BOT_ADMIN_IDS: str = Field(..., description="Список ID администраторов через запятую")
-    
+
     @property
     def admin_ids(self) -> List[int]:
         """Возвращает список ID администраторов как integers."""
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
         default="sqlite+aiosqlite:///app/data/nexusbot.db",
         description="URL подключения к базе данных (SQLite по умолчанию, PostgreSQL для продакшена)"
     )
-    
+
     # Logging Configuration
     LOG_LEVEL: str = Field(
         default="INFO",
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
         default=5,
         description="Количество резервных файлов логов"
     )
-    
+
     # Monitoring Configuration
     PROMETHEUS_ENABLED: bool = Field(
         default=False,

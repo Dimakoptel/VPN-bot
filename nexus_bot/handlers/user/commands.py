@@ -20,9 +20,9 @@ async def cmd_start(message: Message, session: AsyncSession):
     referrer_code = None
     if message.args:
         referrer_code = message.args[0].upper()
-    
+
     # Получаем или создаем пользователя
-    user = await user_service.get_or_create_user(
+    _ = await user_service.get_or_create_user(
         session=session,
         tg_id=message.from_user.id,
         username=message.from_user.username,
@@ -31,7 +31,7 @@ async def cmd_start(message: Message, session: AsyncSession):
         language_code=message.from_user.language_code,
         referrer_code=referrer_code if referrer_code != message.from_user.username else None
     )
-    
+
     # Приветственное сообщение
     welcome_text = (
         f"👋 Привет, {message.from_user.first_name}!\n\n"
@@ -43,7 +43,7 @@ async def cmd_start(message: Message, session: AsyncSession):
         "• /help - Помощь\n"
         "• /support - Связаться с поддержкой"
     )
-    
+
     await message.answer(
         text=welcome_text,
         parse_mode="HTML"
@@ -54,21 +54,21 @@ async def cmd_start(message: Message, session: AsyncSession):
 async def cmd_profile(message: Message, session: AsyncSession):
     """Показывает профиль пользователя."""
     user = await user_service.get_user_by_tg_id(session, message.from_user.id)
-    
+
     if not user:
         await message.answer("❌ Пользователь не найден. Используйте /start")
         return
-    
+
     # Получаем количество рефералов
     referrals_count = await user_service.get_referrals_count(session, user.id)
-    
+
     # Получаем активную подписку
     active_subscription = None
     for sub in user.subscriptions:
         if sub.is_active:
             active_subscription = sub
             break
-    
+
     profile_text = (
         f"👤 <b>Профиль пользователя</b>\n\n"
         f"ID: <code>{user.tg_id}</code>\n"
@@ -76,10 +76,10 @@ async def cmd_profile(message: Message, session: AsyncSession):
         f"Реферальный код: <code>{user.referral_code}</code>\n"
         f"Приглашено друзей: {referrals_count}\n\n"
     )
-    
+
     if active_subscription:
-        from datetime import datetime
-        expires = active_subscription.expires_at.strftime("%d.%m.%Y %H:%M") if active_subscription.expires_at else "Бессрочно"
+        expires = active_subscription.expires_at.strftime(
+            "%d.%m.%Y %H:%M") if active_subscription.expires_at else "Бессрочно"
         profile_text += (
             f"✅ <b>Активная подписка</b>\n"
             f"Тариф: {active_subscription.tariff_name}\n"
@@ -87,7 +87,7 @@ async def cmd_profile(message: Message, session: AsyncSession):
         )
     else:
         profile_text += "❌ Нет активной подписки\n"
-    
+
     await message.answer(text=profile_text, parse_mode="HTML")
 
 
@@ -103,7 +103,7 @@ async def cmd_buy(message: Message):
         "4️⃣ <b>Год</b> - 2499₽ (выгода 30%)\n\n"
         "Нажмите на кнопку ниже, чтобы выбрать тариф."
     )
-    
+
     # Здесь можно добавить InlineKeyboard с тарифами
     await message.answer(text=buy_text, parse_mode="HTML")
 
@@ -122,7 +122,7 @@ async def cmd_help(message: Message):
         "<b>Вопросы?</b>\n"
         f"Пишите в поддержку: {settings.SUPPORT_USERNAME}"
     )
-    
+
     await message.answer(text=help_text, parse_mode="HTML")
 
 
@@ -135,7 +135,7 @@ async def cmd_support(message: Message):
         f"👉 {settings.SUPPORT_USERNAME}\n\n"
         "Мы ответим в ближайшее время!"
     )
-    
+
     await message.answer(text=support_text, parse_mode="HTML")
 
 
