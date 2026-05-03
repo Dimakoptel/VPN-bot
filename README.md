@@ -1,6 +1,10 @@
-# NexusBot - Свободный Telegram бот для управления подписками
+# NexusBot - Свободный Telegram бот для управления VPN подписками
 
 🚀 Современный, полностью свободный бот для управления VPN подписками. Создан с нуля как альтернатива существующим решениям с акцентом на свободу использования и сообщество.
+
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://docs.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-green)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ## 📋 Особенности
 
@@ -12,42 +16,199 @@
 - 📊 **Админ-панель** - статистика, управление пользователями, аудит
 - 🛡️ **Audit Log** - журнал всех действий администраторов
 - 🌐 **Гибкая интеграция** - поддержка 3x-UI, Remnawave или собственных панелей
+- 🐳 **Docker Ready** - автоматическое развертывание одним скриптом
+- 🗄️ **PostgreSQL + Redis** - масштабируемая архитектура
 
-## 🏗️ Структура проекта
+## 🚀 Быстрый старт
+
+### Автоматическое развертывание (рекомендуется)
+
+```bash
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+./deploy.sh
+```
+
+Скрипт автоматически развернет полный стек: бот + PostgreSQL + Redis.
+
+### Ручная установка
+
+```bash
+# 1. Клонирование
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+
+# 2. Установка зависимостей
+pip install -r requirements.txt
+
+# 3. Настройка БД
+python init_db.py
+
+# 4. Настройка переменных окружения
+cp nexus_bot/config/.env.example nexus_bot/config/.env
+# Отредактируйте BOT_TOKEN и другие настройки
+
+# 5. Запуск
+cd nexus_bot && python main.py
+```
+
+## 🏗️ Архитектура проекта
 
 ```
-nexus_bot/
-├── config/              # Конфигурация и настройки
-│   ├── __init__.py
-│   ├── settings.py      # Pydantic настройки
-│   └── .env.example     # Пример переменных окружения
-├── core/                # Ядро приложения
-│   └── database.py      # Менеджер базы данных
-├── handlers/            # Обработчики команд
-│   ├── __init__.py
-│   ├── user/            # Команды пользователей
+VPN-bot/
+├── nexus_bot/                    # Основное приложение
+│   ├── config/                   # Конфигурация
+│   │   ├── settings.py           # Pydantic настройки
+│   │   └── .env.example          # Шаблон переменных
+│   ├── core/                     # Ядро
+│   │   └── database.py           # Менеджер БД
+│   ├── handlers/                 # Обработчики команд
+│   │   ├── user/                 # Пользовательские команды
+│   │   │   ├── __init__.py
+│   │   │   └── commands.py       # /start, /profile, /buy
+│   │   └── admin/                # Админ команды
+│   │       ├── __init__.py
+│   │       └── commands.py       # Управление пользователями
+│   ├── models/                   # SQLAlchemy модели
 │   │   ├── __init__.py
-│   │   ├── start.py     # /start
-│   │   ├── profile.py   # /profile
-│   │   ├── buy.py       # /buy
-│   │   └── help.py      # /help
-│   └── admin/           # Команды администраторов
-│       ├── __init__.py
-│       ├── bans.py      # Управление банами
-│       ├── users.py     # Управление пользователями
-│       ├── stats.py     # Статистика
-│       └── license.py   # Управление лицензиями
-├── models/              # SQLAlchemy модели
-│   ├── __init__.py
-│   └── database.py      # Модели: User, Subscription, License, Ban, AuditLog
-├── middleware/          # Middleware
-│   ├── __init__.py
-│   └── ban_checker.py   # Проверка банов и лицензий
-├── services/            # Бизнес-логика
-│   ├── __init__.py
-│   ├── user_service.py  # Сервис пользователей
-│   ├── subscription_service.py  # Подписки
-│   └── vpn_service.py   # Интеграция с VPN панелями
+│   │   └── database.py           # User, Subscription, Payment
+│   ├── middleware/               # Middleware
+│   │   ├── __init__.py
+│   │   └── ban_checker.py        # Проверка банов
+│   ├── services/                 # Бизнес-логика
+│   │   ├── __init__.py
+│   │   ├── user_service.py       # Сервис пользователей
+│   │   └── user_service.py       # Сервис подписок
+│   ├── utils/                    # Утилиты
+│   │   ├── logging_config.py     # Логирование
+│   │   └── monitoring.py         # Prometheus метрики
+│   ├── main.py                   # Точка входа
+│   ├── requirements.txt          # Python зависимости
+│   ├── Dockerfile                # Docker образ
+│   └── docker-compose.yml        # Локальный Docker Compose
+├── data/                         # Данные (Docker volumes)
+├── logs/                         # Логи
+├── deploy.sh                     # Скрипт развертывания
+├── init_db.py                    # Инициализация БД
+├── docker-compose.yml            # Полный стек
+├── DEPLOY_README.md              # Подробные инструкции
+└── README.md                     # Этот файл
+```
+
+## 🐳 Развертывание
+
+### Полный стек (Docker)
+
+```bash
+./deploy.sh  # Автоматическое развертывание
+```
+
+Включает:
+- **NexusBot** - Python приложение
+- **PostgreSQL** - база данных
+- **Redis** - кэш
+- **Автоматическая сеть** и volumes
+
+### Локальная разработка
+
+```bash
+# Установка
+pip install -r requirements.txt
+python init_db.py
+
+# Запуск
+cd nexus_bot && python main.py
+```
+
+### Продакшн сервер
+
+```bash
+# На VPS с Docker
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+./deploy.sh
+
+# Настройка домена и SSL (опционально)
+# Использование webhook вместо polling
+```
+
+## ⚙️ Конфигурация
+
+Создайте `.env` файл на основе `.env.example`:
+
+```env
+# Bot
+BOT_TOKEN=your_bot_token_from_BotFather
+BOT_ADMIN_IDS=123456789,987654321
+
+# Database
+DATABASE_URL=postgresql+asyncpg://user:pass@db:5432/nexusbot
+
+# Redis
+REDIS_URL=redis://:password@redis:6379/0
+
+# Payment
+PAYMENT_PROVIDER_TOKEN=your_payment_token
+PAYMENT_CURRENCY=RUB
+
+# VPN Panel
+VPN_PANEL_URL=http://your-vpn-panel.com
+VPN_PANEL_LOGIN=admin
+VPN_PANEL_PASSWORD=secure_pass
+```
+
+## 📚 Документация
+
+- **[Быстрое развертывание](DEPLOY_README.md)** - подробный гайд по установке
+- **[Архитектура](DEPLOYMENT.md)** - техническая документация
+- **[Установка](INSTALL.md)** - ручная установка
+- **[Быстрый старт](QUICKSTART.md)** - первые шаги
+
+## 🔧 API и интеграции
+
+### Поддерживаемые VPN панели:
+- 3x-UI
+- Remnawave
+- Собственные решения (через API)
+
+### Платежные системы:
+- YooKassa
+- Stripe
+- Другие (расширяемо)
+
+### Мониторинг:
+- Prometheus метрики
+- Структурированное логирование
+- Health checks
+
+## 🤝 Вклад в проект
+
+1. Fork репозиторий
+2. Создайте feature branch: `git checkout -b feature/amazing-feature`
+3. Commit изменения: `git commit -m 'Add amazing feature'`
+4. Push branch: `git push origin feature/amazing-feature`
+5. Создайте Pull Request
+
+## 📄 Лицензия
+
+Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
+
+## 🆘 Поддержка
+
+- 📧 **Email**: [kopteloff@yahoo.com](mailto:kopteloff@yahoo.com)
+- 💬 **Telegram**: [@nexus_support](https://t.me/nexus_support)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/Dimakoptel/VPN-bot/issues)
+
+## 🙏 Благодарности
+
+- [aiogram](https://github.com/aiogram/aiogram) - асинхронный фреймворк для Telegram ботов
+- [SQLAlchemy](https://www.sqlalchemy.org/) - ORM для Python
+- [Pydantic](https://pydantic-docs.helpmanual.io/) - валидация данных
+- Сообществу Open Source за inspiration
+
+---
+
+**NexusBot** - свободный инструмент для создания VPN сервисов. Присоединяйтесь к сообществу! 🌟
 ├── licenses/            # Система лицензирования
 │   ├── __init__.py
 │   └── manager.py       # Менеджер лицензий

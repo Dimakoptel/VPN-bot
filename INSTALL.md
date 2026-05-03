@@ -2,29 +2,75 @@
 
 ## 📋 Требования
 
-- Python 3.9 или выше
-- pip (менеджер пакетов Python)
-- Telegram Bot Token (получить у @BotFather)
-- SQLite (по умолчанию) или PostgreSQL (опционально)
+### Минимальные требования:
+- **ОС**: Linux, macOS, Windows
+- **Python**: 3.11 или выше
+- **RAM**: 512 MB (рекомендуется 1 GB)
+- **Диск**: 1 GB свободного места
 
-## 🆓 Статус проекта
+### Для Docker развертывания:
+- **Docker**: 20.10+
+- **Docker Compose**: 2.0+
+
+### Для ручной установки:
+- **Python**: 3.11+
+- **pip**: последняя версия
+- **Telegram Bot Token** (от @BotFather)
+
+## 🆓 Лицензия
 
 NexusBot — это **свободное программное обеспечение** под лицензией MIT:
 - ✅ Коммерческое использование разрешено
 - ✅ Модификация кода разрешена
-- ✅ Распространение разрешено
+- ✅ Распространение разрешена
 - ✅ Система лицензий опциональна (можно отключить)
 
 ## 🚀 Установка
 
-### Шаг 1: Клонирование репозитория
+### Вариант 1: Docker (рекомендуется)
+
+#### Автоматическое развертывание
 
 ```bash
-git clone https://github.com/yourusername/nexus_bot.git
-cd nexus_bot
+# Клонирование
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+
+# Автоматический запуск
+./deploy.sh
 ```
 
-### Шаг 2: Создание виртуального окружения (рекомендуется)
+Скрипт автоматически:
+- Создаст конфигурационные файлы
+- Соберет Docker образы
+- Запустит PostgreSQL, Redis и бота
+- Инициализирует базу данных
+
+#### Ручное Docker развертывание
+
+```bash
+# Клонирование
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+
+# Запуск стека
+docker compose up --build -d
+
+# Проверка
+docker compose ps
+docker compose logs bot
+```
+
+### Вариант 2: Ручная установка
+
+#### Шаг 1: Клонирование репозитория
+
+```bash
+git clone https://github.com/Dimakoptel/VPN-bot.git
+cd VPN-bot
+```
+
+#### Шаг 2: Создание виртуального окружения (рекомендуется)
 
 ```bash
 # Linux/Mac
@@ -36,67 +82,173 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### Шаг 3: Установка зависимостей
+#### Шаг 3: Установка зависимостей
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Шаг 4: Настройка конфигурации
+#### Шаг 4: Настройка конфигурации
 
-#### 4.1. Создайте файл .env
+##### 4.1. Создайте файл .env
 
 ```bash
-cp config/.env.example config/.env
+cp nexus_bot/config/.env.example nexus_bot/config/.env
 ```
 
-#### 4.2. Отредактируйте config/.env
+##### 4.2. Отредактируйте .env файл
 
-Откройте файл `config/.env` в текстовом редакторе и заполните необходимые значения:
+```env
+# Bot Configuration
+BOT_TOKEN=ваш_токен_от_BotFather
+BOT_ADMIN_IDS=ваш_telegram_id
 
-```ini
-# === ОБЯЗАТЕЛЬНЫЕ НАСТРОЙКИ ===
-
-# Токен вашего бота от @BotFather
-BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
-
-# ID администраторов (через запятую, без пробелов)
-# Узнать свой ID можно через бота @userinfobot
-BOT_ADMIN_IDS=123456789,987654321
-
-# === БАЗА ДАННЫХ ===
-
-# SQLite (по умолчанию)
+# Database (SQLite для разработки)
 DATABASE_URL=sqlite+aiosqlite:///nexus_bot.db
 
-# Или PostgreSQL (для продакшена)
-# DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/nexus_bot
+# Другие настройки по необходимости...
+```
 
-# === ЛИЦЕНЗИЯ (ОПЦИОНАЛЬНО) ===
+##### 4.3. Инициализация базы данных
 
-# Ключ лицензии - оставьте пустым для свободного использования
-# Система лицензий полностью опциональна!
-LICENSE_KEY=
+```bash
+python init_db.py
+```
 
-# Включить проверку лицензии (true/false)
-# Установите false для полного отключения системы лицензий
-LICENSE_CHECK_ENABLED=false
+#### Шаг 5: Запуск бота
 
-# URL сервера проверки лицензий (только если используете свою систему защиты)
-LICENSE_SERVER_URL=
+```bash
+cd nexus_bot
+python main.py
+```
 
-# === ПЛАТЕЖИ ===
+## ⚙️ Конфигурация
 
-# Токен платежной системы (YooKassa, Stripe и т.д.)
-PAYMENT_PROVIDER_TOKEN=your_payment_token_here
+### Основные настройки
 
-# Валюта по умолчанию
-PAYMENT_CURRENCY=RUB
+| Переменная | Описание | Пример |
+|------------|----------|---------|
+| `BOT_TOKEN` | Токен от @BotFather | `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11` |
+| `BOT_ADMIN_IDS` | ID администраторов | `123456789,987654321` |
+| `DATABASE_URL` | URL базы данных | `sqlite+aiosqlite:///nexus_bot.db` |
+| `REDIS_URL` | URL Redis | `redis://localhost:6379/0` |
 
-# === VPN ПАНЕЛЬ ===
+### Полный список настроек
 
-# URL панели управления VPN (3x-UI, Remnawave и т.д.)
-VPN_PANEL_URL=http://localhost:8080
+См. файл `nexus_bot/config/.env.example`
+
+## 🗄️ Работа с базой данных
+
+### SQLite (по умолчанию)
+
+```bash
+# Инициализация
+python init_db.py
+
+# Просмотр таблиц
+sqlite3 nexus_bot.db ".tables"
+```
+
+### PostgreSQL (продакшн)
+
+```bash
+# В Docker (автоматически)
+./deploy.sh
+
+# Или вручную
+docker run -d --name postgres \
+  -e POSTGRES_DB=nexusbot \
+  -e POSTGRES_USER=nexusbot \
+  -e POSTGRES_PASSWORD=your_password \
+  postgres:15-alpine
+```
+
+## 🔧 Устранение неполадок
+
+### Бот не запускается
+
+1. **Проверьте токен**:
+   ```bash
+   # Токен должен быть валидным
+   python -c "from aiogram.utils.token import validate_token; validate_token('ВАШ_ТОКЕН')"
+   ```
+
+2. **Проверьте зависимости**:
+   ```bash
+   pip list | grep aiogram
+   ```
+
+3. **Проверьте логи**:
+   ```bash
+   python main.py 2>&1 | head -20
+   ```
+
+### Проблемы с базой данных
+
+1. **SQLite**:
+   ```bash
+   # Удалить и пересоздать
+   rm nexus_bot.db
+   python init_db.py
+   ```
+
+2. **PostgreSQL**:
+   ```bash
+   # Проверить подключение
+   docker compose exec db psql -U nexusbot -d nexusbot -c "SELECT 1"
+   ```
+
+### Docker проблемы
+
+```bash
+# Очистка
+docker compose down -v
+docker system prune -f
+
+# Пересборка
+docker compose up --build --force-recreate
+```
+
+## 📊 Мониторинг
+
+### Логи
+
+```bash
+# Docker
+docker compose logs -f bot
+
+# Ручная установка
+tail -f logs/bot.log
+```
+
+### Метрики Prometheus
+
+```bash
+# Доступны на порту 9090
+curl http://localhost:9090/metrics
+```
+
+## 🔄 Обновление
+
+```bash
+# Получить обновления
+git pull origin main
+
+# Docker
+docker compose down
+docker compose pull
+docker compose up -d
+
+# Ручная установка
+pip install -r requirements.txt --upgrade
+python main.py
+```
+
+## 📞 Поддержка
+
+- **Документация**: [README.md](README.md)
+- **Развертывание**: [DEPLOY_README.md](DEPLOY_README.md)
+- **Issues**: [GitHub Issues](https://github.com/Dimakoptel/VPN-bot/issues)
 
 # Логин для доступа к панели
 VPN_PANEL_LOGIN=admin
