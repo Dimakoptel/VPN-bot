@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: nexusbot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - nexusbot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nexusbot_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - nexusbot_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NexusBot Application
+  bot:
+    build:
+      context: ./nexus_bot
+      dockerfile: Dockerfile
+    container_name: nexusbot_app
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
+      - DATABASE_URL=${DATABASE_URL}
+      - LICENSE_SERVER_URL=${LICENSE_SERVER_URL}
+      - LICENSE_KEY=${LICENSE_KEY}
+      - PAYMENT_PROVIDER_TOKEN=${PAYMENT_PROVIDER_TOKEN}
+      - PAYMENT_CURRENCY=${PAYMENT_CURRENCY}
+      - VPN_PANEL_URL=${VPN_PANEL_URL}
+      - VPN_PANEL_LOGIN=${VPN_PANEL_LOGIN}
+      - VPN_PANEL_PASSWORD=${VPN_PANEL_PASSWORD}
+      - APP_NAME=${APP_NAME}
+      - APP_VERSION=${APP_VERSION}
+      - SUPPORT_USERNAME=${SUPPORT_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FILE=${LOG_FILE}
+      - LOG_MAX_BYTES=${LOG_MAX_BYTES}
+      - LOG_BACKUP_COUNT=${LOG_BACKUP_COUNT}
+      - PROMETHEUS_ENABLED=${PROMETHEUS_ENABLED}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "9090:9090"  # Prometheus metrics
+    networks:
+      - nexusbot_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import asyncio; asyncio.run(__import__('core.database').db_manager.initialize())"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  nexusbot_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -18,19 +18,6 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    # Пытаемся загрузить из родительской директории если .env не найден
-    try:
-        alt_env_file = Path(__file__).parent.parent / ".env"
-        if alt_env_file.exists():
-            model_config = SettingsConfigDict(
-                env_file=alt_env_file,
-                env_file_encoding="utf-8",
-                case_sensitive=False,
-                extra="ignore"
-            )
-    except Exception:
-        pass
-
     # Bot Configuration
     BOT_TOKEN: str = Field(..., description="Telegram Bot Token")
     BOT_ADMIN_IDS: str = Field(..., description="Список ID администраторов через запятую")
@@ -52,7 +39,7 @@ class Settings(BaseSettings):
         description="Уровень логирования"
     )
     LOG_FILE: str = Field(
-        default="/var/log/nexusbot/bot.log",
+        default="./logs/bot.log",
         description="Путь к файлу логов"
     )
     LOG_MAX_BYTES: int = Field(
